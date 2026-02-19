@@ -20,6 +20,11 @@ import (
 // external consumers continue to use optimizer.ToolStore.
 type ToolStore = types.ToolStore
 
+// Config defines configuration options for the Optimizer.
+// It is defined in the internal/types package and aliased here so that
+// external consumers continue to use optimizer.Config.
+type Config = types.OptimizerConfig
+
 // InMemoryToolStore implements ToolStore using an in-memory map with
 // case-insensitive substring matching. Thread-safe via sync.RWMutex.
 type InMemoryToolStore struct {
@@ -105,10 +110,11 @@ type SQLiteStoreConfig struct {
 // The store uses an in-memory SQLite database with shared cache for concurrent access.
 // If cfg is nil or EmbeddingDimension is zero, only FTS5 search is used.
 // Otherwise, semantic search is enabled alongside FTS5 using the configured embedding dimension.
-func NewSQLiteToolStore(cfg *SQLiteStoreConfig) (ToolStore, error) {
+// If optCfg is non-nil, its search parameters override the defaults; zero values use defaults.
+func NewSQLiteToolStore(cfg *SQLiteStoreConfig, optCfg *Config) (ToolStore, error) {
 	var embClient types.EmbeddingClient
 	if cfg != nil && cfg.EmbeddingDimension > 0 {
 		embClient = similarity.NewFakeEmbeddingClient(cfg.EmbeddingDimension)
 	}
-	return sqlitestore.NewSQLiteToolStore(embClient)
+	return sqlitestore.NewSQLiteToolStore(embClient, optCfg)
 }
